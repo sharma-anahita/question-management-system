@@ -7,7 +7,7 @@ import { useSheetStore } from "./store/sheetStore";
 import { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
-import { createTopic, createSubtopic, createQuestion, deleteSubtopic, deleteTopic, deleteQuestion } from "./api/sheetApi";
+import { createTopic, createSubtopic, createQuestion, deleteSubtopic, deleteTopic, deleteQuestion, renameTopic, renameSubtopic, renameQuestion } from "./api/sheetApi";
 
 export default function App() {
   const {
@@ -117,7 +117,7 @@ export default function App() {
         }
 
         return (
-          <TopicCard key={tKey} title={topic.title} completedCount={topicCompleted} totalCount={topicTotal} isCollapsed={tCollapsed} onToggle={() => toggleTopicCollapse(tKey)} onAddSubtopic={() => setAddingSubtopicFor(topic.title)} onDelete={() => void deleteTopic(topic.title)}>
+          <TopicCard key={tKey} title={topic.title} completedCount={topicCompleted} totalCount={topicTotal} isCollapsed={tCollapsed} onToggle={() => toggleTopicCollapse(tKey)} onAddSubtopic={() => setAddingSubtopicFor(topic.title)} onDelete={() => void deleteTopic(topic.title)} onRename={(newTitle) => void renameTopic(topic.title, newTitle)}>
             {topic.subtopics.map((st) => {
               const sKey = `${topic.title}||${st.title}`;
               const sCollapsed = !!subtopicCollapsed[sKey];
@@ -126,7 +126,7 @@ export default function App() {
               const subCompleted = (st.questions ?? []).reduce((acc: number, q) => acc + (completion[q._key] ? 1 : 0), 0);
 
               return (
-                <SubtopicCard key={sKey} title={st.title} completedCount={subCompleted} totalCount={subTotal} isCollapsed={sCollapsed} onToggle={() => toggleSubtopicCollapse(sKey)} onAddQuestion={() => setAddingQuestionFor(sKey)} onDelete={() => void deleteSubtopic(topic.title, st.title)}>
+                <SubtopicCard key={sKey} title={st.title} completedCount={subCompleted} totalCount={subTotal} isCollapsed={sCollapsed} onToggle={() => toggleSubtopicCollapse(sKey)} onAddQuestion={() => setAddingQuestionFor(sKey)} onDelete={() => void deleteSubtopic(topic.title, st.title)} onRename={(newTitle) => void renameSubtopic(topic.title, st.title, newTitle)}>
                   <Droppable droppableId={sKey}>
                     {(provided) => (
                       <div ref={provided.innerRef} {...provided.droppableProps}>
@@ -143,6 +143,7 @@ export default function App() {
                                     completed={!!completion[k]}
                                     onToggleComplete={() => toggleQuestionComplete(k)}
                                     onDelete={() => void deleteQuestion(topic.title, st.title, k)}
+                                    onRename={(newTitle) => void renameQuestion(topic.title, st.title, k, newTitle)}
                                   />
                                 </div>
                               )}

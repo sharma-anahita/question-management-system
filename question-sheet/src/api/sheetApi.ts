@@ -41,3 +41,18 @@ export async function deleteQuestion(topicTitle: string, subtopicTitle: string, 
   await delay();
   useSheetStore.getState().deleteQuestion(topicTitle, subtopicTitle, questionKey);
 }
+
+export async function renameTopic(oldTitle: string, newTitle: string): Promise<void> {
+  await delay();
+  useSheetStore.getState().renameTopic(oldTitle, newTitle);
+}
+
+export async function renameSubtopic(topicTitle: string, oldTitle: string, newTitle: string): Promise<void> {
+  await delay();
+  useSheetStore.getState().renameSubtopic(topicTitle, oldTitle, newTitle);
+}
+
+export async function renameQuestion(topicTitle: string, subtopicTitle: string, questionKey: string, newTitle: string): Promise<void> {
+  await delay();
+  useSheetStore.getState().renameQuestion(topicTitle, subtopicTitle, questionKey, newTitle);
+}

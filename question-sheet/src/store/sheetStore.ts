@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import sheetData from "../data/sheet.json";
 
 // ── Types ──────────────────────────────────────────────
@@ -40,6 +41,9 @@ interface SheetState {
   deleteSubtopic: (topicTitle: string, subtopicTitle: string) => void;
   deleteTopic: (topicTitle: string) => void;
   deleteQuestion: (topicTitle: string, subtopicTitle: string, questionKey: string) => void;
+  renameTopic: (oldTitle: string, newTitle: string) => void;
+  renameSubtopic: (topicTitle: string, oldTitle: string, newTitle: string) => void;
+  renameQuestion: (topicTitle: string, subtopicTitle: string, questionKey: string, newTitle: string) => void;
 }
 
 // ── Normalize sheet.json (runs once at import time) ────
@@ -100,11 +104,13 @@ const { topicsState: initialTopics, initialCompletion } = normalizeData();
 
 // ── Store ──────────────────────────────────────────────
 
-export const useSheetStore = create<SheetState>((set) => ({
-  topicsState: initialTopics,
-  completion: initialCompletion,
-  topicCollapsed: {},
-  subtopicCollapsed: {},
+export const useSheetStore = create<SheetState>()(
+  persist(
+    (set) => ({
+      topicsState: initialTopics,
+      completion: initialCompletion,
+      topicCollapsed: {},
+      subtopicCollapsed: {},
 
   toggleTopicCollapse: (key) =>
     set((s) => ({
@@ -255,4 +261,103 @@ export const useSheetStore = create<SheetState>((set) => ({
       delete completion[questionKey];
       return { topicsState, completion };
     }),
-}));
+
+  renameTopic: (oldTitle, newTitle) =>
+    set((s) => {
+      const topicsState = s.topicsState.map((t) => {
+        if (t.title !== oldTitle) return t;
+        return {
+          ...t,
+          title: newTitle,
+          subtopics: t.subtopics.map((st) => ({
+            ...st,
+            questions: st.questions.map((q) => ({
+              ...q,
+              _key: q._key.replace(oldTitle + "||", newTitle + "||"),
+            })),
+          })),
+        };
+      });
+      // update completion keys
+      const completion: Record<string, boolean> = {};
+      for (const [k, v] of Object.entries(s.completion)) {
+        completion[k.startsWith(oldTitle + "||") ? k.replace(oldTitle + "||", newTitle + "||") : k] = v;
+      }
+      // update collapse keys
+      const topicCollapsed = { ...s.topicCollapsed };
+      if (oldTitle in topicCollapsed) {
+        topicCollapsed[newTitle] = topicCollapsed[oldTitle];
+        delete topicCollapsed[oldTitle];
+      }
+      const subtopicCollapsed: Record<string, boolean> = {};
+      for (const [k, v] of Object.entries(s.subtopicCollapsed)) {
+        subtopicCollapsed[k.startsWith(oldTitle + "||") ? k.replace(oldTitle + "||", newTitle + "||") : k] = v;
+      }
+      return { topicsState, completion, topicCollapsed, subtopicCollapsed };
+    }),
+
+  renameSubtopic: (topicTitle, oldTitle, newTitle) =>
+    set((s) => {
+      const oldPrefix = `${topicTitle}||${oldTitle}||`;
+      const newPrefix = `${topicTitle}||${newTitle}||`;
+      const topicsState = s.topicsState.map((t) => {
+        if (t.title !== topicTitle) return t;
+        return {
+          ...t,
+          subtopics: t.subtopics.map((st) => {
+            if (st.title !== oldTitle) return st;
+            return {
+              ...st,
+              title: newTitle,
+              questions: st.questions.map((q) => ({
+                ...q,
+                _key: q._key.replace(oldPrefix, newPrefix),
+              })),
+            };
+          }),
+        };
+      });
+      const completion: Record<string, boolean> = {};
+      for (const [k, v] of Object.entries(s.completion)) {
+        completion[k.startsWith(oldPrefix) ? k.replace(oldPrefix, newPrefix) : k] = v;
+      }
+      const subtopicCollapsed = { ...s.subtopicCollapsed };
+      const oldSKey = `${topicTitle}||${oldTitle}`;
+      const newSKey = `${topicTitle}||${newTitle}`;
+      if (oldSKey in subtopicCollapsed) {
+        subtopicCollapsed[newSKey] = subtopicCollapsed[oldSKey];
+        delete subtopicCollapsed[oldSKey];
+      }
+      return { topicsState, completion, subtopicCollapsed };
+    }),
+
+  renameQuestion: (topicTitle, subtopicTitle, questionKey, newTitle) =>
+    set((s) => ({
+      topicsState: s.topicsState.map((t) => {
+        if (t.title !== topicTitle) return t;
+        return {
+          ...t,
+          subtopics: t.subtopics.map((st) => {
+            if (st.title !== subtopicTitle) return st;
+            return {
+              ...st,
+              questions: st.questions.map((q) =>
+                q._key === questionKey ? { ...q, title: newTitle } : q
+              ),
+            };
+          }),
+        };
+      }),
+    })),
+}),
+    {
+      name: "question-sheet-state",
+      partialize: (state) => ({
+        topicsState: state.topicsState,
+        completion: state.completion,
+        topicCollapsed: state.topicCollapsed,
+        subtopicCollapsed: state.subtopicCollapsed,
+      }),
+    },
+  ),
+);
