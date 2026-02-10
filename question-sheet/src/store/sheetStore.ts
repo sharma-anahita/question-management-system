@@ -37,6 +37,9 @@ interface SheetState {
   addSubtopic: (topicTitle: string, subtopicTitle: string) => void;
   addQuestion: (topicTitle: string, subtopicTitle: string, questionTitle: string) => void;
   reorderQuestions: (topicTitle: string, subtopicTitle: string, sourceIndex: number, destinationIndex: number) => void;
+  deleteSubtopic: (topicTitle: string, subtopicTitle: string) => void;
+  deleteTopic: (topicTitle: string) => void;
+  deleteQuestion: (topicTitle: string, subtopicTitle: string, questionKey: string) => void;
 }
 
 // ── Normalize sheet.json (runs once at import time) ────
@@ -191,4 +194,65 @@ export const useSheetStore = create<SheetState>((set) => ({
         };
       }),
     })),
+
+  deleteSubtopic: (topicTitle, subtopicTitle) =>
+    set((s) => {
+      // collect question keys to clean up completion
+      const keysToRemove: string[] = [];
+      const topicsState = s.topicsState.map((t) => {
+        if (t.title !== topicTitle) return t;
+        const removed = t.subtopics.find((st) => st.title === subtopicTitle);
+        if (removed) {
+          for (const q of removed.questions) keysToRemove.push(q._key);
+        }
+        return { ...t, subtopics: t.subtopics.filter((st) => st.title !== subtopicTitle) };
+      });
+      const completion = { ...s.completion };
+      for (const k of keysToRemove) delete completion[k];
+      const subtopicCollapsed = { ...s.subtopicCollapsed };
+      delete subtopicCollapsed[`${topicTitle}||${subtopicTitle}`];
+      return { topicsState, completion, subtopicCollapsed };
+    }),
+
+  deleteTopic: (topicTitle) =>
+    set((s) => {
+      const keysToRemove: string[] = [];
+      const sKeysToRemove: string[] = [];
+      const topic = s.topicsState.find((t) => t.title === topicTitle);
+      if (topic) {
+        for (const st of topic.subtopics) {
+          sKeysToRemove.push(`${topicTitle}||${st.title}`);
+          for (const q of st.questions) keysToRemove.push(q._key);
+        }
+      }
+      const completion = { ...s.completion };
+      for (const k of keysToRemove) delete completion[k];
+      const subtopicCollapsed = { ...s.subtopicCollapsed };
+      for (const k of sKeysToRemove) delete subtopicCollapsed[k];
+      const topicCollapsed = { ...s.topicCollapsed };
+      delete topicCollapsed[topicTitle];
+      return {
+        topicsState: s.topicsState.filter((t) => t.title !== topicTitle),
+        completion,
+        subtopicCollapsed,
+        topicCollapsed,
+      };
+    }),
+
+  deleteQuestion: (topicTitle, subtopicTitle, questionKey) =>
+    set((s) => {
+      const topicsState = s.topicsState.map((t) => {
+        if (t.title !== topicTitle) return t;
+        return {
+          ...t,
+          subtopics: t.subtopics.map((st) => {
+            if (st.title !== subtopicTitle) return st;
+            return { ...st, questions: st.questions.filter((q) => q._key !== questionKey) };
+          }),
+        };
+      });
+      const completion = { ...s.completion };
+      delete completion[questionKey];
+      return { topicsState, completion };
+    }),
 }));

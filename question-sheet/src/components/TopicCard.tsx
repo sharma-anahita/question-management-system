@@ -7,10 +7,11 @@ interface TopicCardProps {
   isCollapsed?: boolean;
   onToggle?: () => void;
   onAddSubtopic?: () => void;
+  onDelete?: () => void;
   children?: React.ReactNode;
 }
 
-export default function TopicCard({ title, completedCount, totalCount, isCollapsed = false, onToggle, onAddSubtopic, children }: TopicCardProps) {
+export default function TopicCard({ title, completedCount, totalCount, isCollapsed = false, onToggle, onAddSubtopic, onDelete, children }: TopicCardProps) {
   return (
     <div className="bg-[#16213e] rounded-xl overflow-hidden border border-[#1f3056] shadow-sm transition-shadow duration-200 hover:shadow-md">
       {/* header */}
@@ -19,9 +20,14 @@ export default function TopicCard({ title, completedCount, totalCount, isCollaps
           <CollapseArrow isCollapsed={!!isCollapsed} onToggle={onToggle ?? (() => {})} />
           <h2 className="text-white font-semibold text-lg">{title}</h2>
         </div>
-        <span className="text-xs text-gray-400 bg-[#0f0f0f] px-3 py-1 rounded-full">
-          {completedCount} / {totalCount} completed
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400 bg-[#0f0f0f] px-3 py-1 rounded-full">
+            {completedCount} / {totalCount} completed
+          </span>
+          {onDelete && (
+            <button type="button" className="text-xs text-gray-500 hover:text-red-400 transition-colors" onClick={(e) => { e.stopPropagation(); onDelete(); }}>❌</button>
+          )}
+        </div>
       </div>
 
       <div className="px-5 pb-5 space-y-4 transition-all duration-150 ease-in-out">

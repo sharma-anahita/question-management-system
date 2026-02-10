@@ -4,9 +4,10 @@ interface QuestionRowProps {
   link: string;
   completed: boolean;
   onToggleComplete: () => void;
+  onDelete?: () => void;
 }
 
-export default function QuestionRow({ title, difficulty, link, completed, onToggleComplete }: QuestionRowProps) {
+export default function QuestionRow({ title, difficulty, link, completed, onToggleComplete, onDelete }: QuestionRowProps) {
   return (
     <div className="flex items-center justify-between bg-[#0f0f0f] rounded-lg px-4 py-3 hover:bg-[#141422] transition-colors group">
       {/* left side */}
@@ -35,6 +36,9 @@ export default function QuestionRow({ title, difficulty, link, completed, onTogg
         >
           LeetCode ↗
         </a>
+        {onDelete && (
+          <button type="button" className="text-xs text-gray-500 hover:text-red-400 transition-colors" onClick={(e) => { e.stopPropagation(); onDelete(); }}>❌</button>
+        )}
       </div>
     </div>
   );

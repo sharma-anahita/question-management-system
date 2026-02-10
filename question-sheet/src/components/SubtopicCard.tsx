@@ -7,10 +7,11 @@ interface SubtopicCardProps {
   isCollapsed?: boolean;
   onToggle?: () => void;
   onAddQuestion?: () => void;
+  onDelete?: () => void;
   children?: React.ReactNode;
 }
 
-export default function SubtopicCard({ title, completedCount, totalCount, isCollapsed = false, onToggle, onAddQuestion, children }: SubtopicCardProps) {
+export default function SubtopicCard({ title, completedCount, totalCount, isCollapsed = false, onToggle, onAddQuestion, onDelete, children }: SubtopicCardProps) {
   return (
     <div className="bg-[#1a1a2e] rounded-lg border border-[#2a2a4a] overflow-hidden shadow-sm transition-shadow duration-200 hover:shadow-md">
       {/* subtopic header */}
@@ -19,7 +20,12 @@ export default function SubtopicCard({ title, completedCount, totalCount, isColl
           <CollapseArrow isCollapsed={!!isCollapsed} onToggle={onToggle ?? (() => {})} />
           <h3 className="text-gray-200 font-medium text-sm">{title}</h3>
         </div>
-        <span className="text-xs text-gray-500">{completedCount} / {totalCount}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">{completedCount} / {totalCount}</span>
+          {onDelete && (
+            <button type="button" className="text-xs text-gray-500 hover:text-red-400 transition-colors" onClick={(e) => { e.stopPropagation(); onDelete(); }}>❌</button>
+          )}
+        </div>
       </div>
 
       <div className="px-4 pb-3 space-y-2 transition-all duration-150 ease-in-out">

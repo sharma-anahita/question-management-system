@@ -26,3 +26,18 @@ export async function createQuestion(
   await delay();
   useSheetStore.getState().addQuestion(topicTitle, subtopicTitle, questionTitle);
 }
+
+export async function deleteSubtopic(topicTitle: string, subtopicTitle: string): Promise<void> {
+  await delay();
+  useSheetStore.getState().deleteSubtopic(topicTitle, subtopicTitle);
+}
+
+export async function deleteTopic(topicTitle: string): Promise<void> {
+  await delay();
+  useSheetStore.getState().deleteTopic(topicTitle);
+}
+
+export async function deleteQuestion(topicTitle: string, subtopicTitle: string, questionKey: string): Promise<void> {
+  await delay();
+  useSheetStore.getState().deleteQuestion(topicTitle, subtopicTitle, questionKey);
+}
