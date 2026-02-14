@@ -1,73 +1,106 @@
-# React + TypeScript + Vite
+# Interactive Question Management Sheet
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A single-page web application for managing a hierarchical set of questions organized by **topics** and **subtopics**.  
+The application supports full CRUD operations, drag-and-drop reordering, progress tracking, and persistent state, with a clean and intuitive UI inspired by structured coding-preparation sheets (e.g., Codolio).
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## React Compiler
+### Core Functionality
+- **Create, rename, and delete**:
+  - Topics
+  - Subtopics
+  - Questions
+- **Drag-and-drop reordering** of questions within subtopics
+- **Mark questions as completed**
+- **Live progress tracking**:
+  - Overall progress
+  - Per-topic progress
+  - Per-subtopic progress
+- **Collapse / expand** topics and subtopics using arrow controls
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### User Experience
+- Clean **dark + pink themed UI**
+- Centered “sheet-style” layout for focused interaction
+- Smooth collapse and hover transitions
+- Helpful empty states when no data is present
+- Keyboard-friendly inline editing (Enter to save, Esc to cancel)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠 Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **React + TypeScript** (Vite)
+- **Tailwind CSS** for styling
+- **Zustand** for state management
+- **@hello-pangea/dnd** for drag-and-drop interactions
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🧠 State Management
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- Global application state is managed using **Zustand**
+- Stored state includes:
+  - Topics, subtopics, and questions
+  - Completion state
+  - Collapse state
+- Progress counts are **derived dynamically** from question completion state to avoid duplicated or inconsistent data
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 💾 Persistence
+
+- Application state is persisted using **localStorage** via Zustand’s built-in `persist` middleware
+- Persisted data:
+  - Topics and subtopics
+  - Questions
+  - Completion state
+  - Collapse state
+- On load:
+  - Persisted state is restored if available
+  - Otherwise, the app initializes from the provided sample dataset
+
+---
+
+## 🔌 API Integration (Mocked)
+
+A mock asynchronous API layer is implemented to demonstrate CRUD-style API integration without requiring a backend or database.
+
+**Location:** `src/api/sheetApi.ts`
+
+### Available API functions
+- `getSheet()`
+- `createTopic(title)`
+- `renameTopic(oldTitle, newTitle)`
+- `deleteTopic(title)`
+- `createSubtopic(topicTitle, title)`
+- `renameSubtopic(topicTitle, oldTitle, newTitle)`
+- `deleteSubtopic(topicTitle, subtopicTitle)`
+- `createQuestion(topicTitle, subtopicTitle, questionTitle)`
+- `renameQuestion(topicTitle, subtopicTitle, questionKey, newTitle)`
+- `deleteQuestion(topicTitle, subtopicTitle, questionKey)`
+
+Each API function:
+- Returns a `Promise`
+- Simulates network latency with a small delay
+- Internally updates the Zustand store
+
+This satisfies the assignment requirement for API integration without adding unnecessary complexity.
+
+---
+
+## 📦 Sample Data
+
+The application initializes using a provided `sheet.json` dataset, which is normalized into a hierarchical structure:
+
+
+The dataset is used as initial state only and can be fully modified through the UI.
+
+---
+
+## 🚀 Running the Project Locally
+
+```bash
+npm install
+npm run dev
